@@ -1,16 +1,30 @@
+timestamp() {
+date +"%F_%T"
+}
+
+#create temp directory if it doesn't exist
+mkdir -p temp
+
+#create ocr_output directory if it doesn't exist
+mkdir -p ocr_output
+
 for i in *.pdf ; do 
   echo "Converting " $i 
-  convert -background white -alpha remove -density 300 "$i" -depth 8 file-%04d.tiff
+  convert -background white -alpha remove -density 300 "$i" -depth 8 temp/file-%04d.tiff #use this for any files that are not from google news (i.e. proquest)
+  #convert -transparent white -density 300 "$i" -depth 8 file-%04d.tiff #use this for any files that are from google news and have a white border
+
   for x in file-*.tiff; do
     #echo "Text Cleaning..." $x 
     #sh textcleaner -g -e stretch -f 25 -o 10 -u -s 1 -T -p 10 $x clean.tif
     echo "Scanning" $x 
-    tesseract $x $x
-    cat $x.txt >> ocr_output/$i.txt
-    rm $x 
-    rm $x.txt
+    tesseract -c "tessedit_write_images=T" $x temp/$x
+    cat temp/$x.txt >> ocr_output/$i.txt
+    #clean up our temporary files
+    rm temp/$x 
+    rm temp/$x.txt
+    rm temp/tessinput.tif
   done
-  echo $i " scanned.\n" >> ocr_output/log.log 
+  echo $(timestamp) ": "  $i " scanned.\n" >> log.log 
 done
 
 
