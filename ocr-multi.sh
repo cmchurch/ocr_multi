@@ -1,7 +1,19 @@
+#!/bin/bash 
+#CHRISTOPHER M CHURCH
+#ASSISTANT PROFESSOR
+#DEPARTMENT OF HISTORY
+#UNIVERSITY OF NEVADA, RENO
+
+
+#--------------
+#-----INIT-----
+#-------------- 
+#define timestamp function
 timestamp() {
 date +"%F_%T"
 }
 
+#set variables
 start_time=$(timestamp)
 output_dir=ocr_output_$start_time
 
@@ -15,13 +27,14 @@ mkdir -p $output_dir
 #create log directory if it doesn't exist
 mkdir -p log
 
+#--------------
+#-----OCR------
+#--------------
+#CONVERT PDFS TO TIFFs, OCR THEM, APPEND EACH PAGE'S OCR TO A SINGLE OUTPUT FILE
 for i in *.pdf ; do 
   echo "Converting " $i 
-  convert -background white -alpha remove -density 300 "$i" -depth 8 temp/file-%04d.tiff #use this for any files that are not from google news (i.e. proquest)
-  #convert -transparent white -density 300 "$i" -depth 8 file-%04d.tiff #use this for any files that are from google news and have a white border
+  convert -background white -alpha remove -density 300 "$i" -depth 8 temp/file-%04d.tiff #convert each page of the pdf to tiff and then store the temp files in temp dir
   for x in temp/file-*.tiff; do
-    #echo "Text Cleaning..." $x 
-    #sh textcleaner -g -e stretch -f 25 -o 10 -u -s 1 -T -p 10 $x clean.tif
     echo "Scanning" $x 
     tesseract -c "tessedit_write_images=T" $x $x
     cat $x.txt >> ./$output_dir/$i.txt
@@ -33,7 +46,9 @@ for i in *.pdf ; do
   echo $(timestamp) ": "  $i " scanned.\n" >> log/log_$start_time.log 
 done
 
-
+#--------------
+#----CLEAN-----
+#-------------- 
 #now loop over all the scanned files and clean them (remove unnessary newlines, delete page numbers from OneNote, collapse hyphenated words
 #remove all newlines that are not blank lines with perl in paragraph mode with regex
 perl -p -i'.bak' -00 -lpe 'tr/\n/ /d' $output_dir/*.txt
