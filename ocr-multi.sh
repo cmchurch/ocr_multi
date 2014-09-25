@@ -4,6 +4,10 @@
 #DEPARTMENT OF HISTORY
 #UNIVERSITY OF NEVADA, RENO
 
+#INSTRUCTIONS
+# This bash script will OCR scan either PDFs or PNGs and output the results to a like-named file.
+# Make sure to run using "bash ocr-multi.sh" -- sh will throw an exception.
+
 
 #--------------
 #-----INIT-----
@@ -16,6 +20,29 @@ date +"%F_%T"
 #set variables
 start_time=$(timestamp)
 output_dir=ocr_output_$start_time
+
+#define scanning functions
+
+convert_and_scan() {
+  echo "Converting " $1 
+  #convert each page of the pdf to tiff and then store the temp files in temp dir
+  convert -background white -alpha remove -density 300 "$i" -depth 8 file-%04d.tiff 
+  for x in file-*.tiff; do
+	scan $x $1   
+  done
+  #clean up our temporary files
+  rm -r file-*.tiff
+}
+
+scan() {
+    x=$1
+    echo "Scanning" $x 
+    tesseract $x $x
+    cat $x.txt >> ./$output_dir/$2.txt
+    rm $x.txt #remove temp file
+}
+
+
 
 
 #create temp directory if it doesn't exist
@@ -31,18 +58,19 @@ mkdir -p log
 #-----OCR------
 #--------------
 #CONVERT PDFS TO TIFFs, OCR THEM, APPEND EACH PAGE'S OCR TO A SINGLE OUTPUT FILE
-for i in *.pdf ; do 
-  echo "Converting " $i 
-  convert -background white -alpha remove -density 300 "$i" -depth 8 temp/file-%04d.tiff #convert each page of the pdf to tiff and then store the temp files in temp dir
-  for x in temp/file-*.tiff; do
-    echo "Scanning" $x 
-    tesseract -c "tessedit_write_images=T" $x $x
-    cat $x.txt >> ./$output_dir/$i.txt
-    #clean up our temporary files
-    rm $x 
-    rm $x.txt
-    rm tessinput.tif
-  done
+for i in *.pdf *.png ; do 
+  #if [[ ${i: -4} == ".pdf" ]]; then convert_and_scan $i; fi
+  case ${i: -4} in
+	.pdf)
+	    convert_and_scan $i
+		;;
+        .png)
+            scan $i $i
+	    ;;
+        *)
+            echo "unknown."
+	    ;;
+  esac
   echo $(timestamp) ": "  $i " scanned.\n" >> log/log_$start_time.log 
 done
 
