@@ -13,6 +13,11 @@
 #-----INIT-----
 #-------------- 
 
+#check for dependencies
+type convert >/dev/null 2>&1 || { echo >&2 "Imagemagick is not installed.  Aborting."; exit 1; }
+type tesseract >/dev/null 2>&1 || { echo >&2 "Tesseract is not installed.  Aborting."; exit 1;}
+
+
 #get CLI arguments
 
 if [ -n "$1" ]; then tesargs=$1; else tesargs=''; fi
