@@ -12,6 +12,11 @@
 #--------------
 #-----INIT-----
 #-------------- 
+
+#get CLI arguments
+
+if [ -n "$1" ]; then tesargs=$1; else tesargs=''; fi
+
 #define timestamp function
 timestamp() {
 date +"%F_%T"
@@ -37,7 +42,7 @@ convert_and_scan() {
 scan() {
     x=$1
     echo "Scanning" $x 
-    tesseract $x $x
+    tesseract $tesargs $x $x
     cat $x.txt >> ./$output_dir/$2.txt
     rm $x.txt #remove temp file
 }
@@ -58,13 +63,13 @@ mkdir -p log
 #-----OCR------
 #--------------
 #CONVERT PDFS TO TIFFs, OCR THEM, APPEND EACH PAGE'S OCR TO A SINGLE OUTPUT FILE
-for i in *.pdf *.png ; do 
+for i in *.pdf *.png *.PNG *.PDF; do 
   #if [[ ${i: -4} == ".pdf" ]]; then convert_and_scan $i; fi
   case ${i: -4} in
-	.pdf)
+	.pdf|.PDF)
 	    convert_and_scan $i
 		;;
-        .png)
+        .png|.PNG)
             scan $i $i
 	    ;;
         *)
