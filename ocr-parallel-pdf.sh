@@ -32,7 +32,7 @@ for pdf in *.pdf; do
   numpages=$((numpages--))
   pdf_out=$pdf"_out"
   mkdir "$pdf_out"
-  parallel --gnu convert_and_scan ::: $pdf ::: $(seq 0 $numpages) ::: $pdf_out
+  parallel --gnu convert_and_scan ::: $pdf ::: $(seq -f "%05g" 0 $numpages) ::: $pdf_out
   for txt in $pdf_out/*.txt; do
         cat $txt >> ocr_output/$pdf.txt
   done
